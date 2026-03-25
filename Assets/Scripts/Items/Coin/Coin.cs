@@ -2,16 +2,16 @@ using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
-public class Coin : MonoBehaviour
+public class Coin : MonoBehaviour, IPickupable
 {
     [SerializeField] private int _value = 1;
 
-    public event Action<Coin> Taken;
+    public event Action<IPickupable> Collected;
 
     public int Value => _value;
 
-    public void Take()
+    public void Collect()
     {
-        Taken?.Invoke(this);
+        Collected?.Invoke(this);
     }
 }

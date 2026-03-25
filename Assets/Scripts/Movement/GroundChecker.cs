@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 public class GroundChecker : MonoBehaviour
@@ -6,28 +5,18 @@ public class GroundChecker : MonoBehaviour
     [SerializeField] private float _checkRadius = 0.1f;
     [SerializeField] private LayerMask _groundLayer;
     [SerializeField] private Transform _checkPoint;
-    [SerializeField] private float _checkInterval = 0.1f;
-
-    private WaitForSeconds _waitInterval;
 
     public bool IsGrounded { get; private set; }
 
-    public void Awake()
+    private void Awake()
     {
         if (_checkPoint == null)
             _checkPoint = transform;
-        
-        _waitInterval = new WaitForSeconds(_checkInterval);
-        StartCoroutine(CheckGround());
     }
 
-    private IEnumerator CheckGround()
+    private void Update()
     {
-        while (enabled)
-        {
-            Check();
-            yield return _waitInterval;
-        }
+        Check();
     }
 
     public void Check()

@@ -13,6 +13,8 @@ public class Rotator : MonoBehaviour
         if (direction == 0f)
             return;
 
-        transform.rotation = direction > 0f ? _rightQuaternion : _leftQuaternion;
+        transform.rotation = direction > 0f 
+            ? _rightQuaternion 
+            : _leftQuaternion;
     }
 }

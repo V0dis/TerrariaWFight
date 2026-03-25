@@ -2,60 +2,55 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
+    private enum State
+    {
+        Patrol, Chase, Attack, Idle
+    }
+
     [SerializeField] private Mover _mover;
     [SerializeField] private Route _route;
     [SerializeField] private Rotator _rotator;
     [SerializeField] private EnemyAnimator _animator;
     [SerializeField] private EnemyVision _vision;
     [SerializeField] private Health _health;
-    [SerializeField] private Flasher _flasher;
     [SerializeField] private Attacker _attacker;
-    
+    [SerializeField] private Flasher _flasher;
+
     [Header("Settings")]
     [SerializeField] private float _healthPoints = 100f;
-    [SerializeField] private float _speed = 2f;
+    [SerializeField] private float _patrolSpeed = 2f;
     [SerializeField] private float _chaseSpeed = 3f;
-    [SerializeField] private float _rangeToChange = 0.5f;
+    [SerializeField] private float _rangeToChangeWaypoint = 0.5f;
     [SerializeField] private bool _isDeleteOnDeath;
-    
-    [Header("Attack settings")]
-    [SerializeField] private int _damage = 1;
-    [SerializeField] private float _attackRange = 0.5f;
     [SerializeField] private LayerMask _opponentLayer;
-    [SerializeField] private float _attackDelay = 2f;
-    
-    private Transform _currentWaypoint;
-    private Vector2 _moveDirection;
-    private float _sqrRange;
-    private float _sqrAttackRange;
-    private bool _isMoving;
-    private float _attackTimer;
-    private float _deathTimer = 1f;
-    
-    private bool IsWaypointReached =>
-        (_currentWaypoint.position - transform.position).sqrMagnitude < _sqrRange;
 
-    private bool IsPlayerClose =>
-        (_vision.Player.transform.position - transform.position).sqrMagnitude < _sqrAttackRange;
+    private Vector3 _playerPosition;
+    private Transform _currentWaypoint;
+    private float _sqrRangeToChangeWaypoint;
+    private float _sqrAttackRange;
+    private float _sqrDistanceToPlayer;
+    private bool _isMoving;
+    private float _deathTimer = 1f;
+
+    private bool IsWaypointReached =>
+        (_currentWaypoint.position - transform.position).sqrMagnitude < _sqrRangeToChangeWaypoint;
 
     private void Awake()
     {
-        if (_route == null || _mover == null)
-            return;
-
         _route.Initialize();
         _health.Initialize(_healthPoints);
-        _attacker.Initialize(_damage, _attackRange, _opponentLayer);
-        
-        _sqrRange = _rangeToChange * _rangeToChange;
-        _sqrAttackRange = _attackRange * _attackRange;
-        
+        _vision.Initialize(_opponentLayer);
+        _attacker.Initialize(_opponentLayer);
+        _sqrAttackRange = _attacker.AttackRange * _attacker.AttackRange;
+        _sqrRangeToChangeWaypoint = _rangeToChangeWaypoint * _rangeToChangeWaypoint;
+
         _currentWaypoint = _route.GetWaypoint();
     }
 
     private void OnEnable()
     {
-        _health.IsGettingHit += _vision.CheckImpact;
+        _health.IsGettingHit += _vision.CheckForThreat; 
+        _health.IsGettingHit += _flasher.DamageFlash;
         _health.IsDead += Dead;
     }
 
@@ -64,45 +59,92 @@ public class Enemy : MonoBehaviour
         if (_health.IsAlive == false)
             return;
         
-        if (_vision.IsPlayerInSight)
-        {
-            if (IsPlayerClose)
-            {
-                TryAttack();
-                StopMoving();
-                _rotator.SetDirection(_vision.Player.transform.position.x - transform.position.x);
-            }
-            else
-            {
-                MoveToPlayer();
-            }
-        }
-        else if (_currentWaypoint == null)
-        {
-            StopMoving();
-        }
-        else if (IsWaypointReached)
-        {
-            SwitchToNextWaypoint();
-        }
-        else
-        {
-            MoveToWaypoint();
-        }
+        UpdateState(GetCurrentState());
     }
 
     private void OnDisable()
     {
-        _health.IsGettingHit -= _vision.CheckImpact;
+        _health.IsGettingHit -= _vision.CheckForThreat;
+        _health.IsGettingHit -= _flasher.DamageFlash;
         _health.IsDead -= Dead;
+    }
+
+    private State GetCurrentState()
+    {
+        if (_vision.IsPlayerInSight && _vision.TryGetPlayerPosition(out var playerPosition))
+        {
+            _playerPosition = playerPosition.position;
+            _sqrDistanceToPlayer = (_playerPosition - transform.position).sqrMagnitude;
+            
+            return (_sqrAttackRange >= _sqrDistanceToPlayer) 
+                ? State.Attack 
+                : State.Chase;
+        }
+        
+        if (_currentWaypoint != null)
+            return State.Patrol;
+        
+        return State.Idle;
+    }
+
+    private void UpdateState(State state)
+    {
+        switch (state)
+        {
+            case State.Attack:
+                Attack();
+                break;
+
+            case State.Chase:
+                Chase();
+                break;
+
+            case State.Patrol:
+                Patrol();
+                break;
+
+            case State.Idle:
+                StopMoving();
+                break;
+            
+            default:
+                StopMoving();
+                break;
+        }
+    }
+
+    private void Attack()
+    {
+        TryAttack();
+        _rotator.SetDirection(_playerPosition.x - transform.position.x);
+        StopMoving();
+    }
+
+    private void Chase()
+    {
+        Move(_playerPosition, _chaseSpeed); 
+    }
+
+    private void Patrol()
+    {
+        if (IsWaypointReached)
+        {
+            SwitchToNextWaypoint();
+            
+            if (_currentWaypoint == null)
+            {
+                StopMoving();
+                return;
+            }
+        }
+        
+        Move(_currentWaypoint.position, _patrolSpeed);
     }
 
     private void TryAttack()
     {
-        if (Time.time - _attackTimer > _attackDelay)
+        if (_attacker.CanAttack)
         {
-            _attackTimer = Time.time;
-            
             _attacker.TryAttack();
             _animator.SetAttack();
         }
@@ -120,36 +162,26 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    private void MoveToPlayer()
-    {
-        _moveDirection = (_vision.Player.transform.position - transform.position).normalized;
-        _mover.Move(_moveDirection * _chaseSpeed);
-        
-        Move();
-    }
-
-    private void MoveToWaypoint()
-    {
-        _moveDirection = (_currentWaypoint.position - transform.position).normalized;
-        _mover.Move(_moveDirection * _speed);
-        
-        Move();
-    }
-
-    private void Move()
+    private void Move(Vector3 direction, float speed)
     {
         _isMoving = true;
-        _rotator.SetDirection(_moveDirection.x);
+        var correctVector = direction - transform.position;
+        
+        _mover.Move(correctVector.normalized * speed);
+        _rotator.SetDirection(correctVector.x);
         _animator.SetMoving();
     }
 
     private void Dead()
     {
         _animator.SetDead();
-        
-        GetComponent<Rigidbody2D>().simulated = false;
-        GetComponent<Collider2D>().enabled = false;
-        
+
+        if (TryGetComponent(out Rigidbody2D rigidbody))
+            rigidbody.simulated = false;
+
+        if (TryGetComponent(out Collider2D collider))
+            collider.enabled = false;
+
         if (_isDeleteOnDeath)
             Destroy(gameObject, _deathTimer);
     }

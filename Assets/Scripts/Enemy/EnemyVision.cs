@@ -3,147 +3,155 @@ using UnityEngine;
 
 public class EnemyVision : MonoBehaviour
 {
-    [SerializeField] private float _defaultViewDistance = 10f;
-    [SerializeField] private float _chaseViewDistance = 10f;
+    [SerializeField] private float _patrolViewDistance = 10f;
+    [SerializeField] private float _chaseViewDistance = 15f;
     [SerializeField] private float _coneAngle = 60f;
-    [SerializeField] private float _checkPeriod = 0.1f;
+    [SerializeField] private float _checkPeriod = 2f;
     [SerializeField] private LayerMask _obstacleMask;
-    [SerializeField] private bool _IsDrawGizmos = true;
-    
-    private CircleCollider2D _visionTrigger;
+    [SerializeField] private bool _isDrawGizmos = true;
+
+    private LayerMask _playerMask;
+    private Transform _target;
+    private WaitForSeconds _wait;
     private float _halfAngle;
-    private Player _player;
-    private RaycastHit2D _hit;
-    private float _viewDistance;
-    private float _sqrChaseViewDistance;
+    private Vector3 _enemyCenter;
 
-    public bool IsPlayerInSight { get; private set; } = false;
+    public bool IsPlayerInSight { get; private set; }
 
-    public Player Player => _player;
-    
-    private void Awake()
+    public void Initialize(LayerMask playerMask)
     {
-        _viewDistance = _defaultViewDistance;
-        _sqrChaseViewDistance = _chaseViewDistance * _chaseViewDistance;
         _halfAngle = _coneAngle / 2f;
-    }
-
-    private void Start()
-    {
-        _visionTrigger = gameObject.AddComponent<CircleCollider2D>();
-        _visionTrigger.radius = _defaultViewDistance;
-        _visionTrigger.isTrigger = true;
-        _visionTrigger.offset = GetCenter(transform) - transform.position;
-        
+        _wait = new WaitForSeconds(_checkPeriod);
         StartCoroutine(CheckPlayer(_checkPeriod));
+        _playerMask = playerMask;
     }
-
-    public void CheckImpact()
-    {
-        IsPlayerInSight = true;
-    }
-    
 
     public IEnumerator CheckPlayer(float delay)
     {
-        var wait = new WaitForSeconds(delay);
-
         while (enabled)
         {
-            if (IsPLayerInCone(_player) && CanSeePlayer(_player))
-            {
-                _viewDistance = _chaseViewDistance;
-                IsPlayerInSight = true;
-            }
-
-            if (CanSeePlayer(_player) == false || IsPlayerInRange == false)
-            {
-                _viewDistance = _defaultViewDistance;
-                IsPlayerInSight = false;
-            }
-            
-            yield return wait;
-        }
-    }
-
-    private bool IsPlayerInRange =>
-            (_player.transform.position - transform.position).sqrMagnitude <= _sqrChaseViewDistance;
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.TryGetComponent(out Player player))
-        {
-            if (_player == null) 
-                _player = player;
-        }
-    }
+            _enemyCenter = GetCenter(transform);
     
-    private bool IsPLayerInCone(Player player)
+            FindTargetInRange();
+
+            if (IsPlayerInSight)
+            {
+                if (CanSeePlayer() == false || _target == null) 
+                    IsPlayerInSight = false;
+            }
+            else
+            {
+                if (IsPlayerInCone() && CanSeePlayer())
+                    IsPlayerInSight = true;
+            }
+
+            yield return _wait;
+        }
+    }
+
+    public bool TryGetPlayerPosition(out Transform position)
     {
-        if (player == null) 
+        if (IsPlayerInSight && _target != null)
+        {
+            position = _target;
+            return true;
+        }
+
+        position = null;
+        return false;
+    }
+
+    public void CheckForThreat()
+    {
+        FindTargetInRange();
+
+        if (_target != null)
+        {
+            IsPlayerInSight = true;
+        }
+    }
+
+    private void FindTargetInRange()
+    {
+        var collider = Physics2D.OverlapCircle(_enemyCenter, GetCurrentViewDistance(), _playerMask);
+
+        if (collider != null)
+            _target = collider.transform;
+        else
+            _target = null;
+    }
+
+    private float GetCurrentViewDistance()
+    {
+        return IsPlayerInSight
+            ? _chaseViewDistance
+            : _patrolViewDistance;
+    }
+
+    private bool IsPlayerInCone()
+    {
+        if (_target == null)
             return false;
-        
-        Vector3 directonToPlayer = GetCenter(_player.transform) - GetCenter(transform);
-        
-        float cosAnglePlayer = Vector3.Dot(transform.right, directonToPlayer.normalized);
+
+        Vector3 directionToPlayer = GetCenter(_target.transform) - GetCenter(transform);
+
+        float cosAnglePlayer = Vector3.Dot(transform.right, directionToPlayer.normalized);
         float cosHalfCone = Mathf.Cos(_halfAngle * Mathf.Deg2Rad);
         
         return cosAnglePlayer >= cosHalfCone;
     }
 
-    private bool CanSeePlayer(Player player)
+    private bool CanSeePlayer()
     {
-        if (player == null)
+        if (_target == null)
             return false;
-        
-        Vector3 center = GetCenter(transform);
 
-        _hit = Physics2D.Raycast
-        (
-            center,
-            GetCenter(player.transform) - center,
-            _viewDistance,
-            _obstacleMask
-        );
-        
-        return _hit.transform == player.transform;
+        Vector3 direction = GetCenter(_target) - _enemyCenter;
+        RaycastHit2D hit = Physics2D.Raycast(_enemyCenter, direction, GetCurrentViewDistance(), _obstacleMask);
+
+        if (hit.collider != null)
+        {
+            return hit.transform == _target;
+        }
+
+        return true;
     }
 
-    private Vector3 GetCenter(Transform transform)
+    private Vector3 GetCenter(Transform other)
     {
-        if (transform.TryGetComponent(out Collider2D collider))
+        if (other.TryGetComponent(out Collider2D collider))
             return collider.bounds.center;
 
-        return transform.position;
+        return other.position;
     }
 
     private void OnDrawGizmos()
     {
-        if (_IsDrawGizmos == false) 
+        if (_isDrawGizmos == false)
             return;
-        
-        DrawSphere(GetCenter(transform));
 
-        if (IsPlayerInSight)
+        DrawSphere(_enemyCenter);
+
+        if (IsPlayerInSight && _target != null)
             DrawPlayerDirection();
         else
-            DrawCone(GetCenter(transform));
+            DrawCone(_enemyCenter);
     }
 
     private void DrawSphere(Vector3 center)
     {
         Gizmos.color = Color.gray;
-        
+
         if (IsPlayerInSight)
             Gizmos.DrawWireSphere(center, _chaseViewDistance);
         else
-            Gizmos.DrawWireSphere(center, _defaultViewDistance);
+            Gizmos.DrawWireSphere(center, _patrolViewDistance);
     }
 
     private void DrawCone(Vector3 center)
     {
         Gizmos.color = Color.yellow;
-        
+
         DrawCorner(center, _halfAngle);
         DrawCorner(center, -_halfAngle);
     }
@@ -151,12 +159,12 @@ public class EnemyVision : MonoBehaviour
     private void DrawCorner(Vector3 center, float angle)
     {
         Vector3 corner = Quaternion.Euler(0, 0, angle) * transform.right;
-        Gizmos.DrawLine(center, center + corner * _defaultViewDistance);
+        Gizmos.DrawLine(center, center + corner * _patrolViewDistance);
     }
-    
+
     private void DrawPlayerDirection()
     {
         Gizmos.color = Color.blue;
-        Gizmos.DrawLine(GetCenter(transform), _hit.point);
+        Gizmos.DrawLine(_enemyCenter, GetCenter(_target));
     }
 }

@@ -8,39 +8,33 @@ public class Player : MonoBehaviour
     [SerializeField] private UserInput _userInput;
     [SerializeField] private Mover _mover;
     [SerializeField] private Jumper _jumper;
-    [SerializeField] private CoinsCollector _coinsCollector;
-    [SerializeField] private HealthPeekUper _healthPeekUper;
+    [SerializeField] private ItemCollector _itemCollector;
     [SerializeField] private Wallet _wallet;
     [SerializeField] private Rotator _rotator;
     [SerializeField] private PlayerAnimator _animator;
     [SerializeField] private GroundChecker _groundChecker;
     [SerializeField] private Attacker _attacker;
+    [SerializeField] private Flasher _flasher;
     
     [Header("Settings")]
     [SerializeField] private float _maxHealth = 100f;
-    [SerializeField] private bool _isHealableOnMaxHealth = false;
     [SerializeField] private float _speed = 10f;
     [SerializeField] private float _jumpForce = 15f;
-    
-    [Header("Attck Settings")]
-    [SerializeField] private float _attackRange = 1f;
     [SerializeField] private LayerMask _opponentLayer;
-    [SerializeField] private float _attackDamage = 1f;
-    [SerializeField] private float _attackDelay = 0.5f;
-
-    private float _attackTimer;
-
+ 
     private void Awake()
     {
-        _attacker.Initialize( _attackDamage, _attackRange, _opponentLayer);
+        _attacker.Initialize(_opponentLayer);
         _health.Initialize(_maxHealth);
     }
 
     private void OnEnable()
     {
-        _coinsCollector.CoinPickedUp += _wallet.AddCoins;
-        _healthPeekUper.HealthPackPickedUp += TryHeal;
-        _health.IsDead += SetDead;
+        _itemCollector.CoinPickedUp += _wallet.AddCoins;
+        _itemCollector.HealthPackPickedUp += _health.Heal;
+        _health.IsGettingHit += _flasher.DamageFlash;
+        _health.IsGettingHeal += _flasher.HealFlash;
+        _health.IsDead += _animator.SetDead;
     }
 
     private void Update()
@@ -56,17 +50,17 @@ public class Player : MonoBehaviour
 
     private void OnDisable()
     {
-        _coinsCollector.CoinPickedUp -= _wallet.AddCoins;
-        _healthPeekUper.HealthPackPickedUp -= TryHeal;
-        _health.IsDead -= SetDead;
+        _itemCollector.CoinPickedUp -= _wallet.AddCoins;
+        _itemCollector.HealthPackPickedUp -= _health.Heal;
+        _health.IsGettingHit -= _flasher.DamageFlash;
+        _health.IsGettingHeal -= _flasher.HealFlash;
+        _health.IsDead -= _animator.SetDead;
     }
 
     private void TryAttack()
     {
-        if (_userInput.GetMouseClick() && Time.time - _attackTimer > _attackDelay)
+        if (_userInput.GetAttackInput() && _attacker.CanAttack)
         {
-            _attackTimer = Time.time;
-            
             _attacker.TryAttack();
             _animator.SetAttack();
         }
@@ -92,19 +86,5 @@ public class Player : MonoBehaviour
         _animator.SetSpeed(Mathf.Abs(_mover.Velocity.x));
         _animator.SetGrounded(_groundChecker.IsGrounded);
         _animator.SetAirSpeedY(_mover.Velocity.y);
-    }
-
-    private void SetDead()
-    {
-        _animator.SetDead();
-    }
-
-    private void TryHeal(HealthPack healthPack)
-    {
-        if (_health.IsFullHealth == false || _isHealableOnMaxHealth)
-        {
-            _healthPeekUper.PickUp(healthPack);
-            _health.Heal(healthPack.Value);
-        }
     }
 }

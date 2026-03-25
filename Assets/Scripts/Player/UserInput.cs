@@ -4,27 +4,14 @@ public class UserInput : MonoBehaviour
 {
     private const string HorizontalAxis = "Horizontal";
     private const string JumpButton = "Jump";
+    private const int LeftMouseButton = 0;
 
-    private Vector2 _inputCache;
-
-    private void Awake()
-    {
-        _inputCache = Vector2.zero;
-    }
-
-    public Vector2 GetMoveInput()
-    {
-        _inputCache.x = Input.GetAxis(HorizontalAxis);
-        _inputCache.y = 0f;
-        
-        return _inputCache;
-    }
+    public Vector2 GetMoveInput() =>
+        new Vector2(Input.GetAxis(HorizontalAxis), 0f);
 
     public bool GetJumpInput() =>
         Input.GetButtonDown(JumpButton);
-    
 
-    public bool GetMouseClick() =>
-        Input.GetMouseButtonDown(0);
-    
+    public bool GetAttackInput() =>
+        Input.GetMouseButtonDown(LeftMouseButton);
 }
