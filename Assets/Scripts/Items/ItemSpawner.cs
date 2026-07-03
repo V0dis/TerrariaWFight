@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class ItemSpawner : MonoBehaviour
+public class ItemSpawner<T> : MonoBehaviour where T : MonoBehaviour
 {
-    [SerializeField] private MonoBehaviour _prefab;
+    [SerializeField] private T _prefab;
     [SerializeField] private int _countItems;
     [SerializeField] private bool _isAllPoints;
     [SerializeField] private List<Transform> _spawnPoints = new();
@@ -29,7 +29,7 @@ public class ItemSpawner : MonoBehaviour
 
             var item = Instantiate(_prefab, point.position, Quaternion.identity);
             
-            if (item.TryGetComponent(out IPickupable pickupable))
+            if (item is IPickupable pickupable)
                 pickupable.Collected += HandleCollected;
         }
     }

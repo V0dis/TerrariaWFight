@@ -14,8 +14,12 @@ public class EnemyVision : MonoBehaviour
     private Transform _target;
     private WaitForSeconds _wait;
     private float _halfAngle;
+    
     private Vector3 _enemyCenter;
-
+    private Vector3 _playerCenter;
+    private Vector3 _direction;
+    private int _layerMask;
+    
     public bool IsPlayerInSight { get; private set; }
 
     public void Initialize(LayerMask playerMask)
@@ -31,9 +35,15 @@ public class EnemyVision : MonoBehaviour
         while (enabled)
         {
             _enemyCenter = GetCenter(transform);
+
+            if (_target != null)
+            {
+                _playerCenter = GetCenter(_target);
+                _direction = (_playerCenter - _enemyCenter).normalized;
+            }
     
             FindTargetInRange();
-
+            
             if (IsPlayerInSight)
             {
                 if (CanSeePlayer() == false || _target == null) 
@@ -92,10 +102,9 @@ public class EnemyVision : MonoBehaviour
     {
         if (_target == null)
             return false;
+        
 
-        Vector3 directionToPlayer = GetCenter(_target.transform) - GetCenter(transform);
-
-        float cosAnglePlayer = Vector3.Dot(transform.right, directionToPlayer.normalized);
+        float cosAnglePlayer = Vector3.Dot(transform.right, _direction.normalized);
         float cosHalfCone = Mathf.Cos(_halfAngle * Mathf.Deg2Rad);
         
         return cosAnglePlayer >= cosHalfCone;
@@ -103,18 +112,17 @@ public class EnemyVision : MonoBehaviour
 
     private bool CanSeePlayer()
     {
-        if (_target == null)
-            return false;
-
-        Vector3 direction = GetCenter(_target) - _enemyCenter;
-        RaycastHit2D hit = Physics2D.Raycast(_enemyCenter, direction, GetCurrentViewDistance(), _obstacleMask);
-
-        if (hit.collider != null)
+        if (_target != null)
         {
-            return hit.transform == _target;
+            var hit = Physics2D.Raycast(_enemyCenter, _direction, GetCurrentViewDistance(), _obstacleMask | _playerMask);
+            
+            if (hit.collider != null)
+            {
+                return _target == hit.collider.transform;
+            }
         }
-
-        return true;
+        
+        return false;
     }
 
     private Vector3 GetCenter(Transform other)
@@ -129,7 +137,7 @@ public class EnemyVision : MonoBehaviour
     {
         if (_isDrawGizmos == false)
             return;
-
+        
         DrawSphere(_enemyCenter);
 
         if (IsPlayerInSight && _target != null)

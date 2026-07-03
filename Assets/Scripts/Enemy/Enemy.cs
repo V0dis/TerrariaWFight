@@ -41,6 +41,7 @@ public class Enemy : MonoBehaviour
         _health.Initialize(_healthPoints);
         _vision.Initialize(_opponentLayer);
         _attacker.Initialize(_opponentLayer);
+        
         _sqrAttackRange = _attacker.AttackRange * _attacker.AttackRange;
         _sqrRangeToChangeWaypoint = _rangeToChangeWaypoint * _rangeToChangeWaypoint;
 

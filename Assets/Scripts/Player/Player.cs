@@ -15,12 +15,15 @@ public class Player : MonoBehaviour
     [SerializeField] private GroundChecker _groundChecker;
     [SerializeField] private Attacker _attacker;
     [SerializeField] private Flasher _flasher;
-    
+
     [Header("Settings")]
     [SerializeField] private float _maxHealth = 100f;
+
     [SerializeField] private float _speed = 10f;
     [SerializeField] private float _jumpForce = 15f;
     [SerializeField] private LayerMask _opponentLayer;
+    
+    private Transform _transform;
  
     private void Awake()
     {
@@ -45,7 +48,7 @@ public class Player : MonoBehaviour
             Move(_userInput.GetMoveInput().x);
             TryJump();
             RefreshAnimation();
-        } 
+        }
     }
 
     private void OnDisable()
@@ -86,5 +89,11 @@ public class Player : MonoBehaviour
         _animator.SetSpeed(Mathf.Abs(_mover.Velocity.x));
         _animator.SetGrounded(_groundChecker.IsGrounded);
         _animator.SetAirSpeedY(_mover.Velocity.y);
+    }
+
+    private void Deactivate()
+    {
+        if(TryGetComponent<Collider2D>(out var collider)) 
+            collider.enabled = false;
     }
 }
