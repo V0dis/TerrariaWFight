@@ -13,7 +13,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private EnemyAnimator _animator;
     [SerializeField] private EnemyVision _vision;
     [SerializeField] private Health _health;
-    [SerializeField] private Attacker _attacker;
+    [SerializeField] private MeleeAttacker _meleeAttacker;
     [SerializeField] private Flasher _flasher;
 
     [Header("Settings")]
@@ -38,13 +38,13 @@ public class Enemy : MonoBehaviour
     private void Awake()
     {
         _route.Initialize();
-        _health.Initialize(_healthPoints);
-        _vision.Initialize(_opponentLayer);
-        _attacker.Initialize(_opponentLayer);
+        _health.Initialize(_healthPoints); 
+        _vision.Initialize(_opponentLayer); 
+        _meleeAttacker.Initialize(_opponentLayer);
         
-        _sqrAttackRange = _attacker.AttackRange * _attacker.AttackRange;
+        _sqrAttackRange = _meleeAttacker.AttackRange * _meleeAttacker.AttackRange; 
         _sqrRangeToChangeWaypoint = _rangeToChangeWaypoint * _rangeToChangeWaypoint;
-
+        
         _currentWaypoint = _route.GetWaypoint();
     }
 
@@ -144,10 +144,10 @@ public class Enemy : MonoBehaviour
 
     private void TryAttack()
     {
-        if (_attacker.CanAttack)
+        if (_meleeAttacker.IsAttacking == false)
         {
-            _attacker.TryAttack();
-            _animator.SetAttack();
+            _meleeAttacker.TryMeleeAttack();
+            _animator.SetMeleeAttack();
         }
     }
 

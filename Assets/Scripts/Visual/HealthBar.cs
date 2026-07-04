@@ -7,7 +7,7 @@ public class HealthBar : MonoBehaviour
     [SerializeField] private Health _health;
     [SerializeField] private Slider _slider;
     [SerializeField, Min(0)] private float _timeSlider = 0.5f;
-    
+
     private float _backupSliderValue;
     private Coroutine _animationSlider;
 
@@ -32,7 +32,7 @@ public class HealthBar : MonoBehaviour
             _health.IsGettingHit -= SetValue;
         }
     }
-
+    
     private void SetValue()
     {
         if (_animationSlider != null)

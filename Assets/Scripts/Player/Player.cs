@@ -13,8 +13,10 @@ public class Player : MonoBehaviour
     [SerializeField] private Rotator _rotator;
     [SerializeField] private PlayerAnimator _animator;
     [SerializeField] private GroundChecker _groundChecker;
-    [SerializeField] private Attacker _attacker;
+    [SerializeField] private MeleeAttacker _attacker;
     [SerializeField] private Flasher _flasher;
+    [SerializeField] private Vampirism _vampirism;
+    [SerializeField] private VampirismVisualArea _vampirismVisualArea;
 
     [Header("Settings")]
     [SerializeField] private float _maxHealth = 100f;
@@ -29,6 +31,8 @@ public class Player : MonoBehaviour
     {
         _attacker.Initialize(_opponentLayer);
         _health.Initialize(_maxHealth);
+        _vampirism.Initialize(_opponentLayer);
+        _vampirismVisualArea.Initialize(_vampirism.AttackRange);
     }
 
     private void OnEnable()
@@ -38,13 +42,16 @@ public class Player : MonoBehaviour
         _health.IsGettingHit += _flasher.DamageFlash;
         _health.IsGettingHeal += _flasher.HealFlash;
         _health.IsDead += _animator.SetDead;
+        _vampirism.IsGetHealthPoints += _health.Heal;
+        _vampirism.IsSkillEnded += _vampirismVisualArea.Hide;
     }
 
     private void Update()
     {
         if (_health.IsAlive)
         {
-            TryAttack();
+            TryMelleAttack();
+            TryUseVampirism();
             Move(_userInput.GetMoveInput().x);
             TryJump();
             RefreshAnimation();
@@ -58,14 +65,25 @@ public class Player : MonoBehaviour
         _health.IsGettingHit -= _flasher.DamageFlash;
         _health.IsGettingHeal -= _flasher.HealFlash;
         _health.IsDead -= _animator.SetDead;
+        _vampirism.IsGetHealthPoints -= _health.Heal;
+        _vampirism.IsSkillEnded -= _vampirismVisualArea.Hide;
     }
 
-    private void TryAttack()
+    private void TryMelleAttack()
     {
-        if (_userInput.GetAttackInput() && _attacker.CanAttack)
+        if (_userInput.GetAttackInput() && _attacker.IsAttacking == false)
         {
-            _attacker.TryAttack();
-            _animator.SetAttack();
+            _attacker.TryMeleeAttack();
+            _animator.SetMeleeAttack();
+        }
+    }
+
+    private void TryUseVampirism()
+    {
+        if (_userInput.GetVampirismSkillInput() && _vampirism.IsActive == false && _vampirism.IsDelay == false)
+        {
+            _vampirism.TryUseVampirism();
+            _vampirismVisualArea.Show();
         }
     }
     

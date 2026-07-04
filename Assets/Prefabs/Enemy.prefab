@@ -173,7 +173,7 @@ MonoBehaviour:
   _animator: {fileID: 1231257552630965263}
   _vision: {fileID: 2191984367234869583}
   _health: {fileID: 2291562382888253326}
-  _attacker: {fileID: 8224044777868131714}
+  _meleeAttacker: {fileID: 5277444734718469431}
   _flasher: {fileID: 7330605345436660996}
   _healthPoints: 100
   _patrolSpeed: 2
@@ -422,7 +422,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6017377268749516667}
-  - component: {fileID: 8224044777868131714}
+  - component: {fileID: 5277444734718469431}
   m_Layer: 3
   m_Name: Attacker
   m_TagString: Untagged
@@ -439,13 +439,13 @@ Transform:
   m_GameObject: {fileID: 7852383741475184231}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.79999995, y: 0.69000006, z: 0}
+  m_LocalPosition: {x: 0.651, y: 0.69000006, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 5333856029457835562}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8224044777868131714
+--- !u!114 &5277444734718469431
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -454,13 +454,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 7852383741475184231}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8db3729f50904e3ca448c122f68a4e8e, type: 3}
+  m_Script: {fileID: 11500000, guid: 70d17743993c4e6bb9ae5f21bc8471a0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Attacker
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeAttacker
+  _attackRange: 0.9
+  _maxTargetsForAttack: 1
+  _opponentLayer:
+    serializedVersion: 2
+    m_Bits: 128
   _attackDelay: 1
-  _damage: 10
-  _attackRange: 1.4
-  _maxTargetsForAttack: 2
+  _damage: 5
 --- !u!1001 &6992048927991978280
 PrefabInstance:
   m_ObjectHideFlags: 0

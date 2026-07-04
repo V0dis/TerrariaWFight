@@ -2,16 +2,11 @@
 
 public class Attacker : MonoBehaviour
 {
-    [SerializeField] private float _attackDelay = 0.5f;
-    [SerializeField] private float _damage = 10;
     [SerializeField] private float _attackRange;
-    [SerializeField] private int _maxTargetsForAttack = 2;
-
-    private LayerMask _opponentLayer;
+    [SerializeField] private int _maxTargetsForAttack;
+    [SerializeField] private LayerMask _opponentLayer;
+    
     private Collider2D[] _hitsBuffer;
-    private float _nextAttackTime;
-
-    public bool CanAttack => Time.time >= _nextAttackTime;
 
     public float AttackRange => _attackRange;
 
@@ -21,13 +16,8 @@ public class Attacker : MonoBehaviour
         _hitsBuffer = new Collider2D[_maxTargetsForAttack];
     }
 
-    public void TryAttack()
+    protected Health TryGetHealthOpponents()
     {
-        if (CanAttack == false)
-            return;
-
-        _nextAttackTime = Time.time + _attackDelay;
-
         int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, _attackRange, _hitsBuffer, _opponentLayer);
 
         for (int i = 0; i < hitCount; i++)
@@ -36,8 +26,16 @@ public class Attacker : MonoBehaviour
             
             if (hit.TryGetComponent(out Health health) && health.IsAlive && hit.isTrigger == false)
             {
-                health.TakeDamage(_damage);
+                return health;
             }
         }
+        
+        return null;
+    }
+    
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.green;
+        //Gizmos.DrawWireSphere(transform.position, AttackRange);
     }
 }

@@ -34,7 +34,7 @@ public class EnemyAnimator : MonoBehaviour
         _animator.SetBool(RunHash, false);
     }
 
-    public void SetAttack()
+    public void SetMeleeAttack()
     {
         _animator.SetTrigger(_attackHashes[Random.Range(0, _attackHashes.Count)]);
     }
