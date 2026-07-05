@@ -1,17 +1,8 @@
-using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Collider2D))]
-public class HealthPack : MonoBehaviour, IPickupable
+public class HealthPack : PickupableItem
 {
     [SerializeField] private float _healAmount = 25f;
-    
-    public event Action<IPickupable> Collected;
-    
-    public float HealAmount => _healAmount;
 
-    public void Collect()
-    {
-        Collected?.Invoke(this);
-    }
+    public float HealAmount => _healAmount;
 }

@@ -4,11 +4,11 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class EnemyAnimator : MonoBehaviour
 {
-    private static readonly int RunHash = Animator.StringToHash("Run");
-    private static readonly int AttackHash1 = Animator.StringToHash("Attack1");
-    private static readonly int AttackHash2 = Animator.StringToHash("Attack2");
-    private static readonly int AttackHash3 = Animator.StringToHash("Attack3");
-    private static readonly int DeadHash = Animator.StringToHash("Death");
+    private static readonly int s_runHash = Animator.StringToHash("Run");
+    private static readonly int s_attackHash1 = Animator.StringToHash("Attack1");
+    private static readonly int s_attackHash2 = Animator.StringToHash("Attack2");
+    private static readonly int s_attackHash3 = Animator.StringToHash("Attack3");
+    private static readonly int s_deadHash = Animator.StringToHash("Death");
 
     [SerializeField] private Animator _animator;
     
@@ -18,20 +18,20 @@ public class EnemyAnimator : MonoBehaviour
     {
         _attackHashes = new List<int>
         {
-            AttackHash1, 
-            AttackHash2, 
-            AttackHash3
+            s_attackHash1, 
+            s_attackHash2, 
+            s_attackHash3
         };
     }
 
     public void SetMoving()
     {
-        _animator.SetBool(RunHash, true);
+        _animator.SetBool(s_runHash, true);
     }
 
     public void SetIdle()
     {
-        _animator.SetBool(RunHash, false);
+        _animator.SetBool(s_runHash, false);
     }
 
     public void SetMeleeAttack()
@@ -41,6 +41,6 @@ public class EnemyAnimator : MonoBehaviour
 
     public void SetDead()
     {
-        _animator.SetTrigger(DeadHash);
+        _animator.SetTrigger(s_deadHash);
     }
 }

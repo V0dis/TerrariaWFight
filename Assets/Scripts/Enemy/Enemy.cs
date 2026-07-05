@@ -117,7 +117,7 @@ public class Enemy : MonoBehaviour
     private void Attack()
     {
         TryAttack();
-        _rotator.SetDirection(_playerPosition.x - transform.position.x);
+        _rotator.TrySetDirection(_playerPosition.x - transform.position.x);
         StopMoving();
     }
 
@@ -169,7 +169,7 @@ public class Enemy : MonoBehaviour
         var correctVector = direction - transform.position;
         
         _mover.Move(correctVector.normalized * speed);
-        _rotator.SetDirection(correctVector.x);
+        _rotator.TrySetDirection(correctVector.x);
         _animator.SetMoving();
     }
 

@@ -38,12 +38,12 @@ public class Player : MonoBehaviour
     private void OnEnable()
     {
         _itemCollector.CoinPickedUp += _wallet.AddCoins;
-        _itemCollector.HealthPackPickedUp += _health.Heal;
+        _itemCollector.HealthPackPickedUp += _health.TakeHeal;
         _health.IsGettingHit += _flasher.DamageFlash;
         _health.IsGettingHeal += _flasher.HealFlash;
         _health.IsDead += _animator.SetDead;
-        _vampirism.IsGetHealthPoints += _health.Heal;
-        _vampirism.IsSkillEnded += _vampirismVisualArea.Hide;
+        _vampirism.GettingHealthPoints += _health.TakeHeal;
+        _vampirism.SkillEnded += _vampirismVisualArea.Hide;
     }
 
     private void Update()
@@ -61,12 +61,12 @@ public class Player : MonoBehaviour
     private void OnDisable()
     {
         _itemCollector.CoinPickedUp -= _wallet.AddCoins;
-        _itemCollector.HealthPackPickedUp -= _health.Heal;
+        _itemCollector.HealthPackPickedUp -= _health.TakeHeal;
         _health.IsGettingHit -= _flasher.DamageFlash;
         _health.IsGettingHeal -= _flasher.HealFlash;
         _health.IsDead -= _animator.SetDead;
-        _vampirism.IsGetHealthPoints -= _health.Heal;
-        _vampirism.IsSkillEnded -= _vampirismVisualArea.Hide;
+        _vampirism.GettingHealthPoints -= _health.TakeHeal;
+        _vampirism.SkillEnded -= _vampirismVisualArea.Hide;
     }
 
     private void TryMelleAttack()
@@ -80,9 +80,9 @@ public class Player : MonoBehaviour
 
     private void TryUseVampirism()
     {
-        if (_userInput.GetVampirismSkillInput() && _vampirism.IsActive == false && _vampirism.IsDelay == false)
+        if (_userInput.GetVampirismSkillInput() && _vampirism.State == VampirismState.Ready)
         {
-            _vampirism.TryUseVampirism();
+            _vampirism.TryUse();
             _vampirismVisualArea.Show();
         }
     }
@@ -90,7 +90,7 @@ public class Player : MonoBehaviour
     private void Move(float horizontalInput)
     {
         _mover.Move(new Vector2(horizontalInput * _speed, 0));
-        _rotator.SetDirection(horizontalInput);
+        _rotator.TrySetDirection(horizontalInput);
     }
 
     private void TryJump()

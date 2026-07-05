@@ -8,7 +8,7 @@ public class Rotator : MonoBehaviour
     private Quaternion _rightQuaternion = Quaternion.Euler(0f, RightRotation, 0f);
     private Quaternion _leftQuaternion = Quaternion.Euler(0f, LeftRotation, 0f);
 
-    public void SetDirection(float direction)
+    public void TrySetDirection(float direction)
     {
         if (direction == 0f)
             return;

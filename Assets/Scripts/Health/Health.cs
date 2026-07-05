@@ -3,34 +3,34 @@ using UnityEngine;
 
 public class Health : MonoBehaviour
 {
-    private float _maxHealth;
-    private float _currentHealth;
+    private float _maxValue;
+    private float _currentValue;
     
     public event Action IsGettingHit;
     public event Action IsGettingHeal;
     public event Action IsDead;
     
-    public float CurrentHealth => _currentHealth;
-    public float MaxHealth => _maxHealth;
-    public bool IsAlive => _currentHealth > 0;
+    public float CurrentValue => _currentValue;
+    public float MaxValue => _maxValue;
+    public bool IsAlive => _currentValue > 0;
 
-    public void Initialize(float maxHealth)
+    public void Initialize(float maxValue)
     {
-        _maxHealth = maxHealth;
-        _currentHealth = maxHealth;
+        _maxValue = maxValue;
+        _currentValue = maxValue;
     }
 
     public float TakeDamage(float damage)
     {
         if (IsAlive)
         {
-            float takenDamage = _currentHealth < damage ? _currentHealth : damage;
+            float takenDamage = _currentValue < damage ? _currentValue : damage;
             
-            _currentHealth = Mathf.Max(0, _currentHealth - damage);
+            _currentValue = Mathf.Max(0, _currentValue - damage);
             
             IsGettingHit?.Invoke();
 
-            if (_currentHealth <= 0)
+            if (_currentValue <= 0)
                 IsDead?.Invoke();
             
             return takenDamage;
@@ -39,11 +39,11 @@ public class Health : MonoBehaviour
         return 0;
     }
 
-    public void Heal(float amount)
+    public void TakeHeal(float amount)
     {
         if (IsAlive)
         {
-            _currentHealth = Mathf.Min(_maxHealth, _currentHealth + amount);
+            _currentValue = Mathf.Min(_maxValue, _currentValue + amount);
             IsGettingHeal?.Invoke();
         }
     }

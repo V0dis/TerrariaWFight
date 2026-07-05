@@ -9,7 +9,7 @@ public class ItemCollector : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.TryGetComponent(out IPickupable pickupable) 
+        if (other.TryGetComponent(out PickupableItem pickupable) 
             && other.TryGetComponent(out Collider2D itemCollider))
         {
             itemCollider.enabled = false;
@@ -18,13 +18,13 @@ public class ItemCollector : MonoBehaviour
         }
     }
 
-    private void CollectItem(IPickupable pickupable)
+    private void CollectItem(PickupableItem pickupableItem)
     {
-        if (pickupable is Coin coin)
+        if (pickupableItem is Coin coin)
         {
             CoinPickedUp?.Invoke(coin.Value);
         }
-        else if (pickupable is HealthPack healthPack)
+        else if (pickupableItem is HealthPack healthPack)
         {
             HealthPackPickedUp?.Invoke(healthPack.HealAmount);
         }
@@ -33,6 +33,6 @@ public class ItemCollector : MonoBehaviour
             return;
         }
         
-        pickupable.Collect();
+        pickupableItem.Collect();
     }
 }

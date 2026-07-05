@@ -11,7 +11,7 @@ public class HealthBar : MonoBehaviour
     private float _backupSliderValue;
     private Coroutine _animationSlider;
 
-    private float CurrentSliderValue => _health.CurrentHealth / _health.MaxHealth;
+    private float CurrentSliderValue => _health.CurrentValue / _health.MaxValue;
 
     public void OnEnable()
     {

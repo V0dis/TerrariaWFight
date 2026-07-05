@@ -29,7 +29,7 @@ public class ItemSpawner<T> : MonoBehaviour where T : MonoBehaviour
 
             var item = Instantiate(_prefab, point.position, Quaternion.identity);
             
-            if (item is IPickupable pickupable)
+            if (item is PickupableItem pickupable)
                 pickupable.Collected += HandleCollected;
         }
     }
@@ -42,7 +42,7 @@ public class ItemSpawner<T> : MonoBehaviour where T : MonoBehaviour
         return _spawnPoints.OrderBy(x => Guid.NewGuid()).Take(_countItems);
     }
 
-    private void HandleCollected(IPickupable collectedItem)
+    private void HandleCollected(PickupableItem collectedItem)
     {
         if (collectedItem is MonoBehaviour mono)
         {
