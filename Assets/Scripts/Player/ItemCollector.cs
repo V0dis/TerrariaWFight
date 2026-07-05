@@ -12,8 +12,6 @@ public class ItemCollector : MonoBehaviour
         if (other.TryGetComponent(out PickupableItem pickupable) 
             && other.TryGetComponent(out Collider2D itemCollider))
         {
-            itemCollider.enabled = false;
-            
             CollectItem(pickupable);
         }
     }
